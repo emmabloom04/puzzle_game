@@ -1,8 +1,8 @@
 # this will be the main file where code will run.
 import arcade
 
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+SCREEN_WIDTH = 1000
+SCREEN_HEIGHT = 700
 SCREEN_TITLE = "Puzzle Game"
 
 class MyGame(arcade.Window):

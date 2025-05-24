@@ -3,6 +3,7 @@ import arcade
 import arcade.gui
 import random
 import os
+import re
 
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 700
@@ -28,17 +29,43 @@ class MyGame(arcade.Window):
             self.show_welcome_screen()
         self.background = arcade.load_texture("assets/table.jpg")
         self.piece_list = arcade.SpriteList()
+        self.piece_grid = {}
 
         piece_folder = "assets/puzzle_pieces"
-        for filename in os.listdir(piece_folder):
-            if filename.endswith(".JPG"):
+        filenames = sorted(os.listdir(piece_folder))
+        for filename in filenames:
+            if filename.lower().endswith(".jpg"):
                 path = os.path.join(piece_folder, filename)
+
+                match = re.search(r"image(\d+)x(\d+)", filename.lower())
+                if not match:
+                    continue
+
+                row = int(match.group(2))
+                col = int(match.group(1))
+            
+
                 piece = arcade.Sprite(path, scale=0.2)
+
+                offset_x = 200
+                offset_y = 100
+                piece_spacing = 130
+
+                correct_x = offset_x + (col - 1) * piece_spacing
+                correct_y = offset_y + (row - 1) * piece_spacing
+
+                piece.correct_x = correct_x
+                piece.correct_y = correct_y
 
                 piece.center_x = random.randint(50, SCREEN_WIDTH - 50)
                 piece.center_y = random.randint(50, SCREEN_HEIGHT - 50)
 
+                piece.row = row
+                piece.col = col
+                piece.group = set([piece])
+
                 self.piece_list.append(piece)
+                self.piece_grid[(row, col)] = piece
 
     
     def show_welcome_screen(self):
@@ -76,11 +103,42 @@ class MyGame(arcade.Window):
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
         if self.held_piece:
-            self.held_piece.center_x += dx
-            self.held_piece.center_y += dy
+            for piece in self.held_piece.group:
+                piece.center_x += dx
+                piece.center_y += dy
 
     def on_mouse_release(self, x, y, button, modifiers):
-        self.held_piece = None
+        if self.held_piece:
+            snap_distance = 40
+            directions = [(1, 0), (-1, 0), (0, -1), (0, 1)]
+            snapped = False
+
+            for d_row, d_col in directions:
+                neighbor_pos = (self.held_piece.row + d_row, self.held_piece.col + d_col)
+                neighbor = self.piece_grid.get(neighbor_pos)
+
+
+                if neighbor:
+                    offset_x = d_col * (self.held_piece.width / 2 + neighbor.width / 2)
+                    offset_y = -d_row * (self.held_piece.height / 2 + neighbor.height / 2)
+                    
+                    expected_x = neighbor.center_x + offset_x
+                    expected_y = neighbor.center_y + offset_y
+
+                    dx = self.held_piece.center_x - expected_x
+                    dy = self.held_piece.center_y - expected_y
+                    distance = (dx**2 + dy**2) ** 0.5
+
+                    if distance < snap_distance:
+                        self.held_piece.center_x = expected_x
+                        self.held_piece.center_y = expected_y
+                        combined_group = self.held_piece.group.union(neighbor.group)
+                        for p in combined_group:
+                            p.group = combined_group
+                        snapped = True
+            
+
+            self.held_piece = None
 
     def on_draw(self):
         # method automatically called to draw everything on screen.

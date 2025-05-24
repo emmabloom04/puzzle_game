@@ -2,6 +2,7 @@
 import arcade
 import arcade.gui
 import random
+import os
 
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 700
@@ -25,6 +26,19 @@ class MyGame(arcade.Window):
         if self.current_screen == "WELCOME":
             self.show_welcome_screen()
         self.background = arcade.load_texture("assets/table.jpg")
+        self.piece_list = arcade.SpriteList()
+
+        piece_folder = "assets/puzzle_pieces"
+        for filename in os.listdir(piece_folder):
+            if filename.endswith(".JPG"):
+                path = os.path.join(piece_folder, filename)
+                piece = arcade.Sprite(path, scale=0.2)
+
+                piece.center_x = random.randint(50, SCREEN_WIDTH - 50)
+                piece.center_y = random.randint(50, SCREEN_HEIGHT - 50)
+
+                self.piece_list.append(piece)
+
     
     def show_welcome_screen(self):
         self.ui_manager.clear()
@@ -62,6 +76,7 @@ class MyGame(arcade.Window):
             self.ui_manager.draw()
         elif self.current_screen == "GAME":
             arcade.draw_texture_rect(self.background, rect=arcade.LBWH(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT))
+            self.piece_list.draw()
         # sets the background image
 
     def on_update(self, delta_time):

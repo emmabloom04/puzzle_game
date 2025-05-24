@@ -17,6 +17,7 @@ class MyGame(arcade.Window):
         self.ui_manager = arcade.gui.UIManager()
         self.start_button = None
         self.background = None
+        self.held_piece = None
         self.piece_list = None
 
     def setup(self):
@@ -65,9 +66,24 @@ class MyGame(arcade.Window):
         self.current_screen = "GAME"
         self.ui_manager.clear()
 
+    def on_mouse_press(self, x, y, button, modifiers):
+        pieces = arcade.get_sprites_at_point((x, y), self.piece_list)
+        if pieces:
+            self.held_piece = pieces[-1]
+
+            self.piece_list.remove(self.held_piece)
+            self.piece_list.append(self.held_piece)
+
+    def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
+        if self.held_piece:
+            self.held_piece.center_x += dx
+            self.held_piece.center_y += dy
+
+    def on_mouse_release(self, x, y, button, modifiers):
+        self.held_piece = None
+
     def on_draw(self):
         # method automatically called to draw everything on screen.
-        # arcade.start_render()
         self.clear()
         # this line clears the screen and gets it ready for new drawings.
         # after this you might draw sprites and text
@@ -84,7 +100,7 @@ class MyGame(arcade.Window):
         # delta_time is how much time has passed since the last frame.
         # mostly used for animations/movement
         # you would add game logic here, such as update
-        pass
+        self.piece_list.update()
 
     # will need to add some more functions such as on_mouse_press() or on_mouse_drag() to support dragging.
 

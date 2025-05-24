@@ -1,6 +1,7 @@
 # this will be the main file where code will run.
 import arcade
 import arcade.gui
+import random
 
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 700
@@ -15,6 +16,7 @@ class MyGame(arcade.Window):
         self.ui_manager = arcade.gui.UIManager()
         self.start_button = None
         self.background = None
+        self.piece_list = None
 
     def setup(self):
         # method used to initalize or reset the game.
